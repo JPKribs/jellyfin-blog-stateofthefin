@@ -59,12 +59,6 @@
       "name": "Bill Thornton",
       "url": "https://github.com/sponsors/thornbill",
       "repos": ["jellyfin-iOS"]
-    },
-    {
-      "username": "JPKribs",
-      "name": "Joe Kribs",
-      "url": "https://github.com/JPKribs",
-      "repos": ["Swiftfin"]
     }
   ],
   "blacklist": [
