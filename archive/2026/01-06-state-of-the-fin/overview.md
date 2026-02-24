@@ -6,14 +6,14 @@ We aim to keep our community informed and engaged, so feel free to share your fe
 
 ## Project Updates
 
-### Jellyfin Turns 7
+#### Jellyfin Turns 7
 
 December marked Jellyfin's 7th anniversary!
 A lot has changed in 7 years, but we remain steadfast in our commitment to Open Source and to being the best personal media server out there.
 Special thanks to our developers, testers, moderators, and supporters for your invaluable contributions!
 Here's to many more years of collaboration and streaming!
 
-### Versioning
+#### Versioning
 
 We received a substantial amount of feedback regarding our versioning scheme following the 10.11 release, particularly concerning the stability of what are perceived as 'minor' version updates.
 This has prompted internal discussions about potentially revising our versioning scheme in the next major release.
@@ -22,7 +22,7 @@ Stay tuned for further updates as we navigate this feedback!
 
 ## Development Updates
 
-### 10.11 Release Status
+#### 10.11 Release Status
 
 Jellyfin 10.11 introduced a major [EF Core refactor](https://jellyfin.org/posts/efcore-refactoring-incoming/), consolidating the legacy `library.db` into a single unified `jellyfin.db`.
 Following more than six months of development and an additional six months of release candidate testing, version [10.11.0](https://jellyfin.org/posts/jellyfin-release-10.11.0/) was released last year.
@@ -42,7 +42,7 @@ Most general issues have already been fixed, and the next bug-fix release is exp
 
 We are continuing to investigate ways to mitigate performance issues caused by client-side enumeration and filtering of large datasets.
 
-### Jellyfin Web vNext (aka 10.12 / 12.0)
+#### Jellyfin Web vNext (aka 10.12 / 12.0)
 
 - **Default 'Experimental' Layout**: The 'Experimental' layout is now enabled by default for all non-TV devices, introducing a new navigation layout and updated UI components.
 - **Theming Support Overhaul**: We are improving theming support by enabling easier runtime customization of default themes through CSS variables and simplifying the process for creating new bundled themes.

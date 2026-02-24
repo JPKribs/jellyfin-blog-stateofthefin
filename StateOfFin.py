@@ -17,6 +17,7 @@ from github import Auth, Github, GithubException
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPOS_JSON = os.path.join(SCRIPT_DIR, "repos.json")
+CONTRIBUTORS_JSON = os.path.join(SCRIPT_DIR, "contributors.json")
 TEMPLATE_PATH = os.path.join(SCRIPT_DIR, "templates", "stateofthefin.mdx")
 CURRENT_DIR = os.path.join(SCRIPT_DIR, "current")
 ARCHIVE_DIR = os.path.join(SCRIPT_DIR, "archive")
@@ -26,6 +27,37 @@ BLOG_DIR = os.path.join(SCRIPT_DIR, "blog")
 def load_config() -> dict:
     with open(REPOS_JSON) as f:
         return json.load(f)
+
+
+@dataclass
+class ContributorsConfig:
+    maintainers: list[dict[str, str]]
+    maintainer_usernames: set[str]
+    blacklist: set[str]
+    hidden: set[str]  # combined: maintainers + blacklist
+    repo_maintainers: dict[str, list[tuple[str, str]]] = field(default_factory=dict)  # lowercase repo key -> list of (name, url)
+
+
+def load_contributors() -> ContributorsConfig:
+    if not os.path.isfile(CONTRIBUTORS_JSON):
+        return ContributorsConfig([], set(), set(), set(), {})
+    with open(CONTRIBUTORS_JSON) as f:
+        data = json.load(f)
+    maintainers = data.get("maintainers", [])
+    maintainer_usernames = {m["username"] for m in maintainers}
+    blacklist = set(data.get("blacklist", []))
+    hidden = maintainer_usernames | blacklist
+    # Build per-repo maintainer lookup: repo -> [(name, url), ...]
+    repo_maintainers: dict[str, list[tuple[str, str]]] = {}
+    for m in maintainers:
+        name = m.get("name", m["username"])
+        url = m.get("url", f"https://github.com/{m['username']}")
+        for repo in m.get("repos", []):
+            key = repo.lower()
+            if key not in repo_maintainers:
+                repo_maintainers[key] = []
+            repo_maintainers[key].append((name, url))
+    return ContributorsConfig(maintainers, maintainer_usernames, blacklist, hidden, repo_maintainers)
 
 
 def auto_date_range(reference: Optional[datetime] = None) -> tuple[datetime, datetime]:
@@ -153,9 +185,10 @@ class DateUtilities:
 
 class DataCollector:
 
-    def __init__(self, gh: Github, org: str):
+    def __init__(self, gh: Github, org: str, contributors: Optional[ContributorsConfig] = None):
         self.gh = gh
         self.org = org
+        self.contributors = contributors or ContributorsConfig([], set(), set(), set())
 
     def _build_scope(self, repo: Optional[str] = None) -> str:
         if repo:
@@ -284,7 +317,8 @@ class DataCollector:
             contributor_counts: dict[str, int] = {}
             for author in authors:
                 contributor_counts[author] = contributor_counts.get(author, 0) + 1
-            top_contributors = sorted(contributor_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+            filtered = {k: v for k, v in contributor_counts.items() if k not in self.contributors.hidden}
+            top_contributors = sorted(filtered.items(), key=lambda x: x[1], reverse=True)[:3]
             unique_contributors = len(contributor_counts)
 
         return RepoStats(
@@ -560,7 +594,7 @@ def generate_releases(data: RangeData) -> str:
         return ""
 
     lines: list[str] = []
-    lines.append("### Releases")
+    lines.append("#### Releases")
     lines.append("")
     lines.append("| Date | Repository | Release | Commits |")
     lines.append("|------|------------|---------|---------|")
@@ -571,20 +605,22 @@ def generate_releases(data: RangeData) -> str:
     return "\n".join(lines)
 
 
+
 def _render_repo_heading(repo_input: RepoInput, config_display_name: str) -> str:
     """Render a repo heading, using frontmatter client_name/url if available."""
     name = repo_input.client_name or config_display_name
     if repo_input.client_url:
-        return f"## [{name}]({repo_input.client_url})"
-    return f"## {name}"
+        return f"### [{name}]({repo_input.client_url})"
+    return f"### {name}"
 
 
 def _render_repo_block(
     repo_input: RepoInput,
     config_display_name: str,
     stats: Optional[RepoStats],
+    maintainers: Optional[list[tuple[str, str]]] = None,
 ) -> list[str]:
-    """Render a single repo's section: heading, stats, content, then author at bottom."""
+    """Render a single repo's section: heading, stats, maintainers, top contributors, content, then author at bottom."""
     lines: list[str] = []
 
     lines.append(_render_repo_heading(repo_input, config_display_name))
@@ -593,6 +629,11 @@ def _render_repo_block(
     if stats:
         lines.append(f"_{stats.closed_issues} issues closed \u00b7 {stats.merged_prs} PRs merged \u00b7 {stats.unique_contributors} contributors_")
         lines.append("")
+        if maintainers:
+            label = "Maintainer" if len(maintainers) == 1 else "Maintainers"
+            linked = ", ".join(f"[{name}]({url})" for name, url in maintainers)
+            lines.append(f"**{label}:** {linked}")
+            lines.append("")
         if stats.top_contributors:
             lines.append("**Top contributors:** " + ", ".join(f"@{c[0]}" for c in stats.top_contributors))
             lines.append("")
@@ -628,8 +669,10 @@ def generate_sections(
     repo_inputs: dict[str, RepoInput],
     other_title: str = "",
     other_content: str = "",
+    contributors: Optional[ContributorsConfig] = None,
 ) -> str:
     lines: list[str] = []
+    repo_maintainers = contributors.repo_maintainers if contributors else {}
 
     # Known clients from config, alphabetized by display name
     client_repos = config.get("clients", {})
@@ -646,7 +689,8 @@ def generate_sections(
         placed_repos.add(input_key)
         repo_input = repo_inputs[input_key]
         stats = data.repo_stats.get(input_key) or data.repo_stats.get(config_key)
-        lines.extend(_render_repo_block(repo_input, display_name, stats))
+        names = repo_maintainers.get(config_key.lower(), [])
+        lines.extend(_render_repo_block(repo_input, display_name, stats, names))
 
     # Other platforms: repos from "other" config + any unmatched .md files
     other_repos = config.get("other", {})
@@ -669,7 +713,7 @@ def generate_sections(
     has_other = other_repos or other_content or other_active or unmatched
     if has_other:
         section_title = other_title or "Other Platforms"
-        lines.append(f"# {section_title}")
+        lines.append(f"## {section_title}")
         lines.append("")
 
         # Aggregate stats for all "other" config repos
@@ -716,7 +760,8 @@ def generate_sections(
         for input_key, config_key, display_name in other_active:
             repo_input = repo_inputs[input_key]
             stats = data.repo_stats.get(input_key) or data.repo_stats.get(config_key)
-            lines.extend(_render_repo_block(repo_input, display_name, stats))
+            names = repo_maintainers.get(config_key.lower(), [])
+            lines.extend(_render_repo_block(repo_input, display_name, stats, names))
 
         # Individual blocks for unmatched repos
         for repo, repo_input in unmatched:
@@ -724,7 +769,8 @@ def generate_sections(
             if not fallback_name.startswith("Jellyfin"):
                 fallback_name = f"Jellyfin {fallback_name}"
             stats = data.repo_stats.get(repo)
-            lines.extend(_render_repo_block(repo_input, fallback_name, stats))
+            names = repo_maintainers.get(repo.lower(), [])
+            lines.extend(_render_repo_block(repo_input, fallback_name, stats, names))
 
     return "\n".join(lines).rstrip()
 
@@ -869,7 +915,8 @@ def main() -> None:
         per_page=100,
     )
 
-    collector = DataCollector(gh, org)
+    contributors_config = load_contributors()
+    collector = DataCollector(gh, org, contributors_config)
     range_data = collector.collect_range_data(start_date, end_date, all_repos)
 
     # Build placeholders
@@ -881,7 +928,7 @@ def main() -> None:
         "ACTIVITY": generate_activity(range_data),
         "RELEASES": generate_releases(range_data),
         "DEVELOPMENT_UPDATES": overview.get("development updates", "[DEVELOPMENT UPDATES]"),
-        "SECTIONS": generate_sections(config, range_data, repo_inputs, other_title, other_content),
+        "SECTIONS": generate_sections(config, range_data, repo_inputs, other_title, other_content, contributors_config),
         "SIGNOFF": overview.get("sign off", f"\\- {author} and the Jellyfin Team"),
     }
 

@@ -5,7 +5,7 @@ author_name: JPKribs
 author_url: https://github.com/JPKribs
 ---
 
-### Swiftfin 1.4 is out now!
+#### Swiftfin 1.4 is out now!
 
 This is a large release with a lot of changes under the hood. Our three highlight changes are:
 
@@ -13,7 +13,7 @@ This is a large release with a lot of changes under the hood. Our three highligh
 2. [Jellyfin 10.11 Support](https://github.com/jellyfin/Swiftfin/pull/1772)
 3. [Revamped Media Player Manager](https://github.com/jellyfin/Swiftfin/pull/1581)
 
-### Swiftfin Roadmap
+#### Swiftfin Roadmap
 
 A [roadmap / project board](https://github.com/orgs/jellyfin/projects/68) for Swiftfin is now available!
 
