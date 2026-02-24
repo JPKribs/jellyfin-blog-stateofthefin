@@ -1,0 +1,45 @@
+name: State of the Fin
+
+on:
+  schedule:
+    - cron: '0 12 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate Report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python StateOfFin.py
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DATE=$(python -c "from datetime import date; print(date.today().replace(day=1).isoformat())")
+          BRANCH="state-of-the-fin/${DATE}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${BRANCH}"
+          git add blog/ archive/ current/
+          git commit -m "State of the Fin ${DATE}"
+          git push -u origin "${BRANCH}"
+          gh pr create \
+            --title "State of the Fin ${DATE}" \
+            --body "Auto-generated State of the Fin report for review." \
+            --label "state-of-the-fin"

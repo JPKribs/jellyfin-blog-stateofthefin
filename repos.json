@@ -1,0 +1,20 @@
+{
+  "org": "jellyfin",
+  "author": "thornbill",
+  "clients": {
+    "jellyfin-android": "Jellyfin for Android",
+    "jellyfin-androidtv": "Jellyfin for Android TV",
+    "jellyfin-desktop": "Jellyfin Desktop",
+    "jellyfin-iOS": "Jellyfin for iOS",
+    "jellyfin-kodi": "Jellyfin for Kodi",
+    "jellyfin-roku": "Jellyfin for Roku",
+    "jellyfin-xbox": "Jellyfin for Xbox",
+    "Swiftfin": "Swiftfin"
+  },
+  "other": {
+    "jellycon": "Jellyfin Kodi Addon",
+    "jellyfin-tizen": "Jellyfin for Tizen",
+    "jellyfin-webOS": "Jellyfin for WebOS",
+    "jellyfin-vue": "Jellyfin Vue"
+  }
+}
