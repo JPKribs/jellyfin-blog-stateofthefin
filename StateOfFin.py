@@ -60,14 +60,42 @@ def load_contributors() -> ContributorsConfig:
     return ContributorsConfig(maintainers, maintainer_usernames, blacklist, hidden, repo_maintainers)
 
 
+def _find_last_blog_date() -> Optional[datetime]:
+    """Scan the blog/ directory for the most recent State of the Fin post date."""
+    if not os.path.isdir(BLOG_DIR):
+        return None
+    dates: list[datetime] = []
+    for year_dir in os.listdir(BLOG_DIR):
+        year_path = os.path.join(BLOG_DIR, year_dir)
+        if not os.path.isdir(year_path):
+            continue
+        for entry in os.listdir(year_path):
+            # Expect format: MM-DD-state-of-the-fin
+            if not entry.endswith("-state-of-the-fin"):
+                continue
+            parts = entry.split("-state-of-the-fin")[0]  # e.g. "01-06"
+            try:
+                dt = datetime.strptime(f"{year_dir}-{parts}", "%Y-%m-%d")
+                dates.append(dt)
+            except ValueError:
+                continue
+    return max(dates) if dates else None
+
+
 def auto_date_range(reference: Optional[datetime] = None) -> tuple[datetime, datetime]:
     ref = reference or datetime.now()
-    first_of_month = ref.replace(day=1)
-    if first_of_month.month == 1:
-        start = first_of_month.replace(year=first_of_month.year - 1, month=12)
+    end = ref
+    last_blog = _find_last_blog_date()
+    if last_blog and last_blog < end:
+        start = last_blog
     else:
-        start = first_of_month.replace(month=first_of_month.month - 1)
-    return start, first_of_month
+        # Fallback: previous month (first run or no prior blogs)
+        first_of_month = ref.replace(day=1)
+        if first_of_month.month == 1:
+            start = first_of_month.replace(year=first_of_month.year - 1, month=12)
+        else:
+            start = first_of_month.replace(month=first_of_month.month - 1)
+    return start, end
 
 
 # MARK: - Models
