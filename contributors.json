@@ -4,7 +4,7 @@
       "username": "JPVenson",
       "name": "Jean-Pierre Bachmann",
       "url": "https://coff.ee/venson",
-      "repos": ["jellyfin-xbox"]
+      "repos": ["jellyfin","jellyfin-xbox"]
     },
     {
       "username": "1hitsong",
@@ -16,7 +16,7 @@
       "username": "nielsvanvelzen",
       "name": "Niels van Velzen",
       "url": "https://github.com/sponsors/nielsvanvelzen",
-      "repos": ["jellyfin-androidtv", "jellyfin-android"]
+      "repos": ["jellyfin","jellyfin-androidtv", "jellyfin-android"]
     },
     {
       "username": "TimGels",
@@ -34,7 +34,7 @@
       "username": "joshuaboniface",
       "name": "Joshua Boniface",
       "url": "https://github.com/sponsors/joshuaboniface",
-      "repos": []
+      "repos": ["jellyfin"]
     },
     {
       "username": "oddstr13",
@@ -46,7 +46,7 @@
       "username": "Bond-009",
       "name": "Bond_009",
       "url": "https://github.com/sponsors/Bond-009",
-      "repos": []
+      "repos": ["jellyfin"]
     },
     {
       "username": "LePips",
@@ -55,10 +55,22 @@
       "repos": ["Swiftfin"]
     },
     {
+      "username": "JPKribs",
+      "name": "Joe Kribs",
+      "url": "https://github.com/JPKribs",
+      "repos": ["Swiftfin"]
+    },
+    {
       "username": "thornbill",
       "name": "Bill Thornton",
       "url": "https://github.com/sponsors/thornbill",
-      "repos": ["jellyfin-iOS"]
+      "repos": ["jellyfin-web","jellyfin-iOS"]
+    },
+    {
+      "username": "andrewrabert",
+      "name": "Andrew Rabert",
+      "url": "https://github.com/andrewrabert",
+      "repos": ["jellyfin-desktop"]
     }
   ],
   "blacklist": [

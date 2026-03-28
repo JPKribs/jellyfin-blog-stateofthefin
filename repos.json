@@ -1,6 +1,10 @@
 {
   "org": "jellyfin",
   "author": "thornbill",
+  "core": {
+    "jellyfin": "Jellyfin",
+    "jellyfin-web": "Jellyfin Web"
+  },
   "clients": {
     "jellyfin-android": "Jellyfin for Android",
     "jellyfin-androidtv": "Jellyfin for Android TV",
